@@ -14,8 +14,13 @@ class CPU:
             0b00000001: self.hlt,
             0b10000010: self.ldi,
             0b01000111: self.prn,
-            0b10100010: self.mul
+            0b10100010: self.mul,
+            0b10100111: self.cmp_function,
+            0b01010100: self.jmp,
+            0b01010101: self.jeq,
+            0b01010110: self.jne
         }
+        self.flag = self.reg[4]
 
     def ram_read(self, address):
         return self.ram[address]
@@ -37,6 +42,28 @@ class CPU:
     def mul(self, operand_a, operand_b):
         self.alu("MUL", operand_a, operand_b)
         return (3, True)
+
+    # SPRINT FUNCTIONS
+
+    def cmp_function(self, operand_a, operand_b):
+            self.alu("CMP", operand_a, operand_b)
+            return (3, True)
+
+    def jmp(self, operand_a, operand_b):
+        self.pc = self.reg[operand_a]
+        return (0, True)
+
+    def jeq(self, operand_a, operand_b):
+        if self.flag == 0b00000001:
+            self.pc = self.reg[operand_a]
+            return(0, True)
+        return (2, True)
+
+    def jne(self, operand_a, operand_b):
+        if self.flag != 0b00000001:
+            self.pc = self.reg[operand_a]
+            return(0, True)
+        return (2, True)
 
     def load(self, program):
         """Load a program into memory."""
@@ -75,9 +102,15 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        #elif op == "SUB": etc
         elif op == "MUL":
             self.reg[reg_a] = (self.reg[reg_a] * self.reg[reg_b])
+        elif op == "CMP":
+            if self.reg[reg_a] > self.reg[reg_b]:
+                self.flag = 0b00000010
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                self.flag = 0b00000100
+            elif self.reg[reg_a] == self.reg[reg_b]:
+                self.flag = 0b00000001
         else:
             raise Exception("Unsupported ALU operation")
 
